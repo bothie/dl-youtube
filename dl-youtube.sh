@@ -47,7 +47,7 @@ urldecode () {
 		(
 			while read url
 			do
-				httpdecode "$url"
+				httpdecode --decode "$url"
 			done
 		)
 	else
@@ -63,8 +63,50 @@ urldecode () {
 	fi
 }
 
+get_infopage () {
+	cat "./$vid.info-page"
+}
+
 get_var () {
-	grep "^$1=" "./$vid.info-page" | sed -e "s/^$1=//"
+	grep "^$1=" | sed -e "s/^$1=//" | urldecode
+}
+
+get_varnames () {
+	sed -e 's/&/\
+/g' | sed -e 's/^\([^=]\+\)=.*$/\1/'
+}
+
+get_size () {
+	sed -e 's/,/\
+/g' | wc -l
+}
+
+get_index () {
+	sed -e 's/,/\
+/g' | head -n "$1" | tail -n 1 | sed -e 's/&/\
+/g'
+}
+
+get_infopage_var () {
+	get_infopage | get_var "$@"
+}
+
+readyn () {
+	yn=i
+	while test "$yn" != "y" \
+	&&    test "$yn" != "Y" \
+	&&    test "$yn" != "n" \
+	&&    test "$yn" != "N"
+	do
+		echo "$@" >&2
+		read yn
+	done
+	if test "$yn" = "y" || test "$yn" = "Y"
+	then
+		echo -n true
+	else
+		echo -n false
+	fi
 }
 
 while test -n "$1"
@@ -94,69 +136,125 @@ do
 	
 	t dl infopage "$vid"
 	echo "Downloading Info page for video (vid=$vid) ..." >&2
-	wget -U Mozilla -nv "http://www.youtube.com/get_video_info?&video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en" -O - | sed -e 's/&/\
+	if true
+	then
+		wget -U Mozilla -nv "http://www.youtube.com/get_video_info?&video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en" -O - | sed -e 's/&/\
 /g' > "./$vid.info-page"
+	fi
 	
-	if test "$(get_var status)" != "ok"
+	if test "$(get_infopage_var status)" != "ok"
 	then
 		echo -en "\e[31m" >&2
-		httpdecode "$(get_var reason)"
+		get_infopage_var reason
 		echo -en "\e[0m" >&2
 		rm "./$vid.info-page"
 		continue
 	fi
 	
-	fmt_url_map="$(get_var fmt_url_map)"
+	fmt_url_map="$(get_infopage_var fmt_url_map)"
 	
 	nb="$name_base"
 	
 	if test -z "$nb"
 	then
-		nb="$(get_var title | urldecode | sed -e 's!/!_!g')"
+		nb="$(get_infopage_var title | sed -e 's!/!_!g')"
 	fi
 	
 	if test -n "$nb"
 	then
 		if test -n "$1" || test $part != 1
 		then
-			name="$nb (Split+Youtube: $part+$vid)"
+			base="$nb (Split+Youtube: $part+$vid)"
 			let part=part+1
 		else
-			name="$nb (Youtube: $vid)"
+			base="$nb (Youtube: $vid)"
 		fi
 	else
-		name="$vid"
-	fi
-	name="$name.flv"
-	
-	if test -z "$cont"
-	then
-		output="$name"
-		let num=0
-		while test -e "$output"
-		do
-			let num=num+1
-			output="$name.$num"
-		done
-		name="$output"
+		base="$vid"
 	fi
 	
-	t Downloading video to "$name"
-	echo -n "Downloading actual video to " >&2
-	echo "$name"
+	for i in $(seq 1 1 $(get_infopage | get_var url_encoded_fmt_stream_map | get_size))
+	do
+		url="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var url)"
+		itag="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var itag)"
+		name="$base.$itag.flv"
+		
+		ok=false
+		
+		if grep "^$itag$" ~/.bothie/dl-youtube.itag-whitelist >/dev/null 2>&1
+		then
+			ok=true
+		fi
+		
+		if ! $ok
+		then
+			ok=true
+			if grep "^$itag$" ~/.bothie/dl-youtube.itag-blacklist >/dev/null 2>&1
+			then
+				ok=false
+			fi
+			if $ok
+			then
+				echo "itag=$itag is neither in ~/.bothie/dl-youtube.itag-whitelist nor in ~/.bothie/dl-youtube.itag-blacklist"
+				accept=$(readyn "Do you want to accept this itag (y/n)?")
+				if ! $accept
+				then
+					ok=false
+				fi
+				extendlist=$(readyn "Add this choice to $(
+					$accept && echo -n "whitelist" || echo -n "blacklist"
+				) (y/n)?")
+				if $extendlist
+				then
+					if $accept
+					then
+						list="whitelist"
+					else
+						list="blacklist"
+					fi
+					if ! test -d ~/.bothie
+					then
+						mkdir ~/.bothie
+					fi
+					echo "$itag" >> ~/.bothie/dl-youtube.itag-$list
+				fi
+			fi
+		fi
+		
+		if ! $ok
+		then
+			continue
+		fi
+		
+		if test -z "$cont"
+		then
+			output="$name"
+			let num=0
+			while test -e "$output" \
+			&& ( ! test -f "$output" \
+			||   ! test -s "$output" )
+			do
+				let num=num+1
+				output="$name.$num"
+			done
+			name="$output"
+		fi
+		
+		t Downloading video to "$name"
+		echo -n "Downloading actual video to " >&2
+		echo "$name"
+		
+		wget $cont "$url" -O "$name" || exit 2
+		
+#		for name in $(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_varnames)
+#		do
+#			echo -en "\t$name: "
+#			get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var $name
+#		done
+		
+		break
+	done
 	
-	echo "fmt_url_map:"
-	echo "$fmt_url_map" | sed -e 's/%2C/\
-/g' | sed -e 's/%7C/ /'
-	
-	wget $cont "$(
-		get_var fmt_url_map | sed -e 's/%2C/\
-/g' | sed -e 's/%7C/ /' | grep -v "^\(37\|22\) " | head -n 1 | while read fmt url
-		do
-			echo "$url" | urldecode
-		done
-	)" -O "$name" || exit 2
-	
-	rm "./$vid.info-page"
+	test -s "$name" && rm "./$vid.info-page"
 done
 t ""
