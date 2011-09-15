@@ -232,7 +232,7 @@ do
 			let num=0
 			while test -e "$output" \
 			&& ( ! test -f "$output" \
-			||   ! test -s "$output" )
+			||     test -s "$output" )
 			do
 				let num=num+1
 				output="$name.$num"
