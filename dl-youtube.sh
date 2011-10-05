@@ -121,9 +121,8 @@ do
 	
 	vid="$(
 		echo "$1" | sed \
-			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/watch?v=\([-_0-9a-zA-Z]\+\)\(&.*$\)\?_\3_' \
-			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/v/\([-_0-9a-zA-Z]\+\)\(&.*$\)\?_\3_' \
-		
+			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/watch?\(.*&\)\?v=\([-_0-9a-zA-Z]\+\)\(&.*$\)\?_\4_' \
+			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/\(v\|embed\)/\([-_0-9a-zA-Z]\+\)\(&.*$\)\?_\4_' \
 	)"
 	shift
 	
@@ -136,17 +135,31 @@ do
 	
 	t dl infopage "$vid"
 	echo "Downloading Info page for video (vid=$vid) ..." >&2
-	if true
-	then
-		wget -U Mozilla -nv "http://www.youtube.com/get_video_info?&video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en" -O - | sed -e 's/&/\
-/g' > "./$vid.info-page"
-	fi
+	info_page_url="http://www.youtube.com/get_video_info?&video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en"
 	
-	if test "$(get_infopage_var status)" != "ok"
-	then
+	for method in "youtube" "hidemyass.com"
+	do
+		case "$method" in
+			youtube)
+				wget -U Mozilla -nv "$info_page_url" -O -
+				;;
+			
+			hidemyass.com)
+				wget 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$info_page_url")" -O -
+				;;
+		esac | sed -e 's/&/\
+/g' > "./$vid.info-page"
+		if test "$(get_infopage_var status)" == "ok"
+		then
+			break
+		fi
 		echo -en "\e[31m" >&2
 		get_infopage_var reason
 		echo -en "\e[0m" >&2
+		let pass=pass+1
+	done
+	if test "$(get_infopage_var status)" != "ok"
+	then
 		rm "./$vid.info-page"
 		continue
 	fi
@@ -244,7 +257,17 @@ do
 		echo -n "Downloading actual video to " >&2
 		echo "$name"
 		
-		wget $cont "$url" -O "$name" || exit 2
+		case "$method" in
+			youtube)
+				wget $cont "$url" -O "$name" || exit 2
+#				wget -U Mozilla -nv "$info_page_url" -O -
+				;;
+			
+			hidemyass.com)
+				wget $cont 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$url")" -O "$name" || exit 2
+#				wget 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$info_page_url")" -O -
+				;;
+		esac
 		
 #		for name in $(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_varnames)
 #		do
