@@ -196,6 +196,7 @@ do
 		
 		if grep "^$itag$" ~/.bothie/dl-youtube.itag-whitelist >/dev/null 2>&1
 		then
+			echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
 			ok=true
 		fi
 		
@@ -204,6 +205,7 @@ do
 			ok=true
 			if grep "^$itag$" ~/.bothie/dl-youtube.itag-blacklist >/dev/null 2>&1
 			then
+				echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
 				ok=false
 			fi
 			if $ok
