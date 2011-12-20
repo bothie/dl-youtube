@@ -1,5 +1,7 @@
 #! /bin/sh
 
+WGET=/usr/bin/wget
+
 t () {
 	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ $*"
 }
@@ -119,6 +121,31 @@ do
 		continue
 	fi
 	
+	plid="$(
+		echo "$1" | grep "/playlist?" | sed \
+			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/playlist?list=\(PL[02-356789A-F]\+\)\(&.*$\)\?_\3_'  \
+	)"
+	
+	if test -n "$plid"
+	then
+		shift
+		
+		t got playlist id "$plid"
+		$WGET "http://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.html" || continue
+		title="$(
+			grep "og:title" "$plid.play-list.html" | sed -e 's/^ *<meta property="og:title" content="\([^"]\+\)">.*$/\1/' -e 's!/!_!g'
+		)"
+		test -d "$title" || mkdir "$title" || continue
+		(
+			cd "$title"
+			dl-youtube $(
+				grep "^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*$" "../$plid.play-list.html" \
+				| sed -e "s!^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*\$!\1!"
+			)
+		)
+		continue
+	fi
+	
 	vid="$(
 		echo "$1" | sed \
 			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/watch?\(.*&\)\?v=\([-_0-9a-zA-Z]\+\)\(&.*$\)\?_\4_' \
@@ -141,11 +168,11 @@ do
 	do
 		case "$method" in
 			youtube)
-				wget -U Mozilla -nv "$info_page_url" -O -
+				$WGET -U Mozilla -nv "$info_page_url" -O -
 				;;
 			
 			hidemyass.com)
-				wget 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$info_page_url")" -O -
+				$WGET 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$info_page_url")" -O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
@@ -175,7 +202,7 @@ do
 	
 	if test -n "$nb"
 	then
-		if test -n "$1" || test $part != 1
+		if test -n "$name_base" || test $part != 1
 		then
 			base="$nb (Split+Youtube: $part+$vid)"
 			let part=part+1
@@ -261,13 +288,11 @@ do
 		
 		case "$method" in
 			youtube)
-				wget $cont "$url" -O "$name" || exit 2
-#				wget -U Mozilla -nv "$info_page_url" -O -
+				$WGET $cont "$url" -O "$name" || exit 2
 				;;
 			
 			hidemyass.com)
-				wget $cont 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$url")" -O "$name" || exit 2
-#				wget 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$info_page_url")" -O -
+				$WGET $cont 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$url")" -O "$name" || exit 2
 				;;
 		esac
 		
