@@ -4,6 +4,7 @@ WGET=/usr/bin/wget
 
 t () {
 	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ $*"
+	echo "$*"
 }
 
 processed_arg=true
@@ -56,6 +57,7 @@ urldecode () {
 		sed \
 			-e 's/+/ /g' \
 			-e 's_%26_\&_g' \
+			-e 's_%2C_,_g' \
 			-e 's_%2F_/_g' \
 			-e 's/%3A/:/g' \
 			-e 's/%3D/=/g' \
@@ -190,8 +192,6 @@ do
 		rm "./$vid.info-page"
 		continue
 	fi
-	
-	fmt_url_map="$(get_infopage_var fmt_url_map)"
 	
 	nb="$name_base"
 	
