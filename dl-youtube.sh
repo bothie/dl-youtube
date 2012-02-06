@@ -67,6 +67,35 @@ urldecode () {
 	fi
 }
 
+urlencode () {
+	echo ">>> urlencode" >&2
+	if test -n "$(type -p httpencode)"
+	then
+		(
+			while read url
+			do
+				httpencode --encode "$url"
+			done
+		)
+	else
+		for url in "$@"
+		do
+			result="$(
+				echo "$url" \
+				| sed \
+					-e 's/+/%2B/g' \
+					-e 's/ /+/g' \
+					-e 's/&/%26/g' \
+					-e 's/=/%3D/g' \
+			
+			)"
+			echo "»$url« -> »$result«" >&2
+			echo "$result"
+		done
+	fi
+	echo "<<< urlencode" >&2
+}
+
 get_infopage () {
 	cat "./$vid.info-page"
 }
@@ -174,7 +203,7 @@ do
 				;;
 			
 			hidemyass.com)
-				$WGET 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$info_page_url")" -O -
+				$WGET 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(urlencode "$info_page_url")" -O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
@@ -292,7 +321,7 @@ do
 				;;
 			
 			hidemyass.com)
-				$WGET $cont 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(httpencode "$url")" -O "$name" || exit 2
+				$WGET $cont 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" || exit 2
 				;;
 		esac
 		
