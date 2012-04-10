@@ -160,7 +160,7 @@ do
 	
 	plid="$(
 		echo "$1" | grep "/playlist?" | sed \
-			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/playlist?list=\(PL[02-356789A-F]\+\)\(&.*$\)\?_\3_'  \
+			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/playlist?list=\(PL[02-356789A-F]\+\)\(&.*$\)\?_\4_'  \
 	)"
 	
 	if test -n "$plid"
@@ -185,8 +185,8 @@ do
 	
 	vid="$(
 		echo "$1" | sed \
-			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/watch?\(.*&\)\?v=\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\4_' \
-			-e 's_^\(http://\)\?\(www\.\)\?youtube\.com/\(v\|embed\)/\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\4_' \
+			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/watch?\(.*&\)\?v=\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\5_' \
+			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/\(v\|embed\)/\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\5_' \
 	)"
 	shift
 	
