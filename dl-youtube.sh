@@ -2,6 +2,8 @@
 
 WGET=/usr/bin/wget
 
+hidemyass_domain=1.hidemyass.com
+
 t () {
 	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ $*"
 	echo "$*"
@@ -69,6 +71,8 @@ urldecode () {
 			-e 's/%5B/[/g' \
 			-e 's/%5D/]/g' \
 			-e 's/%25/%/g' \
+			-e 's/%C3%BC/ü/g' \
+			-e 's/%C3%B6/ö/g' \
 	
 	fi
 }
@@ -209,7 +213,7 @@ do
 				;;
 			
 			hidemyass.com)
-				$WGET 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(urlencode "$info_page_url")" -O -
+				$WGET "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url")" -O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
@@ -327,7 +331,7 @@ do
 				;;
 			
 			hidemyass.com)
-				$WGET $cont 'http://6.hidemyass.com/includes/process.php?action=update&idx=1' --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" || exit 2
+				$WGET $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" || exit 2
 				;;
 		esac
 		
