@@ -5,7 +5,8 @@ WGET=/usr/bin/wget
 hidemyass_domain=1.hidemyass.com
 
 t () {
-	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ $*"
+	settitle "[$video_num/$num_args] $*"
+#	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ [$video_num/$num_args] $*"
 	echo "$*"
 }
 
@@ -14,30 +15,42 @@ processed_arg=true
 name_base=""
 part=1
 cont=""
+from_playlist=false
 
 while $processed_arg
 do
 	processed_arg=false
-	if test "X-O" = "X$1"
-	then
-		processed_arg=true
-		shift
-		name_base="$1"
-		shift
-	fi
-	if test "X--part" == "X$1"
-	then
-		processed_arg=true
-		shift
-		part="$1"
-		shift
-	fi
-	if test "X-c" = "X$1"
-	then
-		processed_arg=true
-		cont="-c"
-		shift
-	fi
+	case "$1" in
+		"-O")
+			processed_arg=true
+			shift
+			name_base="$1"
+			shift
+			continue
+			;;
+
+		"--part")
+			processed_arg=true
+			shift
+			part="$1"
+			shift
+			continue
+			;;
+
+		"-c")
+			processed_arg=true
+			cont="-c"
+			shift
+			continue
+			;;
+		
+		"--from-playlist")
+			processed_arg=true
+			from_playlist=true
+			shift
+			continue
+			;;
+	esac
 done
 
 if test -z "$1"
@@ -45,6 +58,14 @@ then
 	echo "Syntax: $0 [-c] [-O <target-filename-base>] <youtube-url> [...]" >&2
 	exit 1
 fi
+
+num_args=$#
+num_digits=1
+video_num=0
+if test $num_args -gt    10; then num_digits=2; fi
+if test $num_args -gt   100; then num_digits=3; fi
+if test $num_args -gt  1000; then num_digits=4; fi
+if test $num_args -gt 10000; then num_digits=5; fi
 
 urldecode () {
 	if test -n "$(type -p httpdecode)"
@@ -179,7 +200,7 @@ do
 		test -d "$title" || mkdir "$title" || continue
 		(
 			cd "$title"
-			dl-youtube $(
+			dl-youtube --from-playlist $(
 				grep "^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*$" "../$plid.play-list.html" \
 				| sed -e "s!^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*\$!\1!"
 			)
@@ -241,6 +262,11 @@ do
 	
 	if test -n "$nb"
 	then
+		if $from_playlist
+		then
+			nb="$(printf "[%0*i] %s" $num_digits $video_num "$nb")"
+			let video_num=video_num+1
+		fi
 		if test -n "$name_base" || test $part != 1
 		then
 			base="$nb (Split+Youtube: $part+$vid)"
@@ -310,13 +336,13 @@ do
 		if test -z "$cont"
 		then
 			output="$name"
-			let num=0
+			let collision_protect_num=0
 			while test -e "$output" \
 			&& ( ! test -f "$output" \
 			||     test -s "$output" )
 			do
-				let num=num+1
-				output="$name.$num"
+				let collision_protect_num=collision_protect_num+1
+				output="$name.$collision_protect_num"
 			done
 			name="$output"
 		fi
