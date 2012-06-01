@@ -185,7 +185,7 @@ do
 	
 	plid="$(
 		echo "$1" | grep "/playlist?" | sed \
-			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/playlist?list=\(PL[02-356789A-F]\+\)\(&.*$\)\?_\4_'  \
+			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/playlist?list=\(\(PL\|SP\)[02-356789A-F]\+\)\(&.*$\)\?_\4_'  \
 	)"
 	
 	if test -n "$plid"
@@ -200,7 +200,7 @@ do
 		test -d "$title" || mkdir "$title" || continue
 		(
 			cd "$title"
-			dl-youtube --from-playlist $(
+			dl-youtube $cont --from-playlist $(
 				grep "^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*$" "../$plid.play-list.html" \
 				| sed -e "s!^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*\$!\1!"
 			)
@@ -247,17 +247,17 @@ do
 		echo -en "\e[0m" >&2
 		let pass=pass+1
 	done
-	if test "$(get_infopage_var status)" != "ok"
-	then
-		rm "./$vid.info-page"
-		continue
-	fi
 	
 	nb="$name_base"
 	
 	if test -z "$nb"
 	then
-		nb="$(get_infopage_var title | sed -e 's!/!_!g')"
+		if test "$(get_infopage_var status)" != "ok"
+		then
+			nb="fail"
+		else
+			nb="$(get_infopage_var title | sed -e 's!/!_!g')"
+		fi
 	fi
 	
 	if test -n "$nb"
@@ -276,6 +276,12 @@ do
 		fi
 	else
 		base="$vid"
+	fi
+	
+	if test "$(get_infopage_var status)" != "ok"
+	then
+		rm "./$vid.info-page"
+		continue
 	fi
 	
 	for i in $(seq 1 1 $(get_infopage | get_var url_encoded_fmt_stream_map | get_size))
