@@ -153,11 +153,12 @@ do
 	fi
 	
 	plid="$(
-		echo "$1" | grep "/playlist?" | sed \
+		# grep "/playlist?" | 
+		
+		echo "$1" | sed \
 			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/playlist?list=\(\(PL\|SP\)[02-356789A-F]\+\)\(&.*$\)\?_\4_'  \
 	)"
-	
-	if test -n "$plid"
+	if test "$(echo -n "$plid" | wc -c)" == 18
 	then
 		shift
 		
@@ -166,9 +167,9 @@ do
 		title="$(
 			grep "og:title" "$plid.play-list.html" | sed -e 's/^ *<meta property="og:title" content="\([^"]\+\)">.*$/\1/' -e 's!/!_!g'
 		)"
-		test -d "$title" || mkdir "$title" || continue
+		test -d "$title" || mkdir "$title (Youtube: $plid)" || continue
 		(
-			cd "$title"
+			cd "$title (Youtube: $plid)"
 			dl-youtube $cont --from-playlist $(
 				grep "^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*$" "../$plid.play-list.html" \
 				| sed -e "s!^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*\$!\1!"
