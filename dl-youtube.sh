@@ -17,6 +17,8 @@ part=1
 cont=""
 from_playlist=false
 
+declare -a wget_extra_arguments
+
 while $processed_arg
 do
 	processed_arg=false
@@ -47,6 +49,15 @@ do
 		"--from-playlist")
 			processed_arg=true
 			from_playlist=true
+			shift
+			continue
+			;;
+		
+		"--wget")
+			processed_arg=true
+			shift
+			echo "Found wget argument $1"
+			wget_extra_arguments+=("$1")
 			shift
 			continue
 			;;
@@ -329,11 +340,11 @@ do
 		
 		case "$method" in
 			youtube)
-				$WGET $cont "$url" -O "$name" || exit 2
+				$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || exit 2
 				;;
 			
 			hidemyass.com)
-				$WGET $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" || exit 2
+				$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" || exit 2
 				;;
 		esac
 		
