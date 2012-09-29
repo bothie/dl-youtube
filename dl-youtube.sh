@@ -338,6 +338,8 @@ do
 		echo -n "Downloading actual video to " >&2
 		echo "$name"
 		
+		sleep 1
+		
 		case "$method" in
 			youtube)
 				$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || exit 2
