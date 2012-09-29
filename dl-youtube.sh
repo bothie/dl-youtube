@@ -16,6 +16,8 @@ name_base=""
 part=1
 cont=""
 from_playlist=false
+blacklist=""
+whitelist=""
 
 declare -a wget_extra_arguments
 
@@ -58,6 +60,22 @@ do
 			shift
 			echo "Found wget argument $1"
 			wget_extra_arguments+=("$1")
+			shift
+			continue
+			;;
+		
+		"--blacklist")
+			processed_arg=true
+			shift
+			blacklist="$1"
+			shift
+			continue
+			;;
+		
+		"--whitelist")
+			processed_arg=true
+			shift
+			whitelist="$1"
 			shift
 			continue
 			;;
@@ -273,7 +291,19 @@ do
 		
 		ok=false
 		
-		if grep "^$itag$" ~/.bothie/dl-youtube.itag-whitelist >/dev/null 2>&1
+		if echo "$whitelist" | grep "^$itag$" >/dev/null 2>&1
+		then
+			echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
+			ok=true
+		else
+			if echo "$blacklist" | grep "^$itag$" >/dev/null 2>&1
+			then
+				echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
+				continue
+			fi
+		fi
+		
+		if ! $ok && grep "^$itag$" ~/.bothie/dl-youtube.itag-whitelist >/dev/null 2>&1
 		then
 			echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
 			ok=true
