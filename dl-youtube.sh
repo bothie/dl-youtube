@@ -1,6 +1,12 @@
 #! /bin/sh
+#
+# Change-Credits:
+# 2012-10-01: petya: http://www.ngcoders.com/php-script/php-youtube-video-downloader-script/#comment-16211
+# 	* USER_AGENT statt nur "Mozilla" auf "Mozilla/5.0 usw" gesetzt
+# 	* sig-Variable an video url anhängen - also url="$url&signature=$sig"
 
 WGET=/usr/bin/wget
+USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1"
 
 hidemyass_domain=1.hidemyass.com
 
@@ -229,7 +235,7 @@ do
 	do
 		case "$method" in
 			youtube)
-				$WGET -U Mozilla -nv "$info_page_url" -O -
+				$WGET -U "$USER_AGENT" -nv "$info_page_url" -O -
 				;;
 			
 			hidemyass.com)
@@ -285,8 +291,22 @@ do
 	
 	for i in $(seq 1 1 $(get_infopage | get_var url_encoded_fmt_stream_map | get_size))
 	do
+		get_infopage | get_var url_encoded_fmt_stream_map | get_index $i
+#		foreach($urls as $url)
+#		{
+#		$uc=explode(“&”,$url);
+#		$um=explode(“=”,$uc[1]);
+#		$ul=explode(“=”,$uc[0]);
+#		$si=explode(“=”,$uc[4]);
+#		$u = urldecode($um[1]);
+#		$foundArray[$ul[1]] = $u.”&signature=”.$si[1];
+#		}
+		
 		url="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var url)"
 		itag="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var itag)"
+		sig="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var sig)"
+		url="$url&signature=$sig"
+		
 		name="$base.$itag.flv"
 		
 		ok=false
