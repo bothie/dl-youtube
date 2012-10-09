@@ -191,9 +191,10 @@ do
 		# grep "/playlist?" | 
 		
 		echo "$1" | sed \
-			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/playlist?list=\(\(PL\|SP\)[02-356789A-F]\+\)\(&.*$\)\?_\4_'  \
+			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/playlist?list=\(\(PL\|SP\)[-0-9A-Za-z]\+\)\(&.*$\)\?$_\4_'  \
 	)"
-	if test "$(echo -n "$plid" | wc -c)" == 18
+	if test "$(echo -n "$plid" | wc -c)" == 18 \
+	|| test "$(echo -n "$plid" | wc -c)" == 34
 	then
 		shift
 		
