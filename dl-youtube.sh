@@ -203,9 +203,11 @@ do
 		title="$(
 			grep "og:title" "$plid.play-list.html" | sed -e 's/^ *<meta property="og:title" content="\([^"]\+\)">.*$/\1/' -e 's!/!_!g'
 		)"
-		test -d "$title" || mkdir "$title (Youtube: $plid)" || continue
+		dir="$title (Youtube: $plid)"
+		echo "Downloading playlist into $dir"
+		test -d "$dir" || mkdir "$dir" || continue
 		(
-			cd "$title (Youtube: $plid)"
+			cd "$dir"
 			dl-youtube $cont --from-playlist $(
 				grep "^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*$" "../$plid.play-list.html" \
 				| sed -e "s!^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*\$!\1!"
