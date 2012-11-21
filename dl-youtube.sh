@@ -268,22 +268,22 @@ do
 		fi
 	fi
 	
-	if test -n "$nb"
+	if test -z "$nb"
 	then
-		if $from_playlist
-		then
-			nb="$(printf "[%0*i] %s" $num_digits $video_num "$nb")"
-			let video_num=video_num+1
-		fi
-		if test -n "$name_base" || test $part != 1
-		then
-			base="$nb (Split+Youtube: $part+$vid)"
-			let part=part+1
-		else
-			base="$nb (Youtube: $vid)"
-		fi
-	else
 		base="$vid"
+	fi
+	
+	if $from_playlist
+	then
+		nb="$(printf "[%0*i] %s" $num_digits $video_num "$nb")"
+		let video_num=video_num+1
+	fi
+	if test -n "$name_base" || test $part != 1
+	then
+		base="$nb (Split+Youtube: $part+$vid)"
+		let part=part+1
+	else
+		base="$nb (Youtube: $vid)"
 	fi
 	
 	if test "$(get_infopage_var status)" != "ok"
