@@ -256,34 +256,36 @@ do
 		let pass=pass+1
 	done
 	
-	nb="$name_base"
+	base="$name_base"
 	
-	if test -z "$nb"
+	if test -z "$base"
 	then
 		if test "$(get_infopage_var status)" != "ok"
 		then
-			nb="fail"
+			base="fail"
 		else
-			nb="$(get_infopage_var title | sed -e 's!/!_!g')"
+			base="$(get_infopage_var title | sed -e 's!/!_!g')"
 		fi
 	fi
 	
-	if test -z "$nb"
+	if test -z "$base"
 	then
 		base="$vid"
+		split_youtube=""
 	fi
 	
 	if $from_playlist
 	then
-		nb="$(printf "[%0*i] %s" $num_digits $video_num "$nb")"
+		base="$(printf "[%0*i] %s" $num_digits $video_num "$base")"
 		let video_num=video_num+1
 	fi
+	
 	if test -n "$name_base" || test $part != 1
 	then
-		base="$nb (Split+Youtube: $part+$vid)"
+		split_youtube=" (Split+Youtube: $part+$vid)"
 		let part=part+1
 	else
-		base="$nb (Youtube: $vid)"
+		split_youtube=" (Youtube: $vid)"
 	fi
 	
 	if test "$(get_infopage_var status)" != "ok"
@@ -309,8 +311,6 @@ do
 		itag="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var itag)"
 		sig="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var sig)"
 		url="$url&signature=$sig"
-		
-		name="$base.$itag.flv"
 		
 		ok=false
 		
@@ -373,19 +373,29 @@ do
 			continue
 		fi
 		
-		if test -z "$cont"
-		then
-			output="$name"
-			let collision_protect_num=0
-			while test -e "$output" \
-			&& ( ! test -f "$output" \
-			||     test -s "$output" )
-			do
-				let collision_protect_num=collision_protect_num+1
-				output="$name.$collision_protect_num"
-			done
-			name="$output"
-		fi
+		while true
+		do
+			output="$base$split_youtube.$itag.flv"
+			if test -z "$cont"
+			then
+				let collision_protect_num=0
+				while test -e "$output" \
+				&& ( ! test -f "$output" \
+				||     test -s "$output" )
+				do
+					let collision_protect_num=collision_protect_num+1
+					output="$base$split_youtube.$itag.flv.$collision_protect_num"
+				done
+			fi
+			touch "$output" && break
+			base="$( printf "%.$(( $(echo -n "$base" | wc -c) - 1 ))s" "$base" )"
+			if test -z "$base"
+			then
+				base="$vid"
+				split_youtube=""
+			fi
+		done
+		name="$output"
 		
 		t Downloading video to "$name"
 		echo -n "Downloading actual video to " >&2
