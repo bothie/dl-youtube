@@ -1,0 +1,83 @@
+			dl-youtube
+			==========
+
+In 2009 I downloaded and used a python script written by Ricardo Garcia
+Gonzalez and Danny Colligan to download Youtube video - until - it didn't
+work any longer. Youtube has a constant history of changing their site so
+that the download scripts need to be kept in sync with the site all the time.
+While this alone is a tedious job, doing it in a programming language you
+don't understand is even more difficult. Additionally, I couldn't really
+understand, why a simple download script takes almost 40KB of code. So I
+wrote a new bash script - in it's first version smaller than 3KB - it now
+evolved to being able to download full playlists and automagically
+downloading videos using hidemyass.com to bypass censorship of your country.
+
+dl-youtube is free software as mandated by the GNU General Public
+License - Google for a copy.
+
+BEFORE YOU START: You also need the script urldecode for this script to work.
+
+Syntax: dl-youtube [-O <video-name>] [-c] [--part <part>] [--from-playlist]
+		[--wget <wget-argument>] [--blacklist <itag-id>]
+		[--whitelist <itag-id>] <playlist-and-video-spec-list>
+
+
+	-O - the name of the video on the disc. That name will be completed
+		by appending a string of the form " (Youtube: $vid).$itag.flv"
+		or " (Split+Youtube: $split+$vid).$itag.flv" where
+		* $vid is the video id,
+		* $split is the ordinary number of the video - almost[TM]
+		  counting command line arguments,
+		* $itag is the video itag (i.e. resolution & quality).
+	
+	--part - when downloading 5 videos, and you break the script after
+		video 3 for instance and want to continue, you can drop the
+		first two arguments and pass --part 3 instead, telling that
+		the first video argument is in fact the third split-part,
+		not the first. In this simple scenario, just giving -c would
+		work as well, however it generates unneccessary server load.
+	
+	-c - continue download - passed to wget in the final video stream
+		downloading invocation
+	
+	--from-playlist - internally used. It's behavior is undefined.
+		DON'T USE IT.
+	
+	--wget - Pass the next argument to wget unmodified. It's bypassed
+		only to the final wget instance used to actually download the
+		video stream. Could be used to give arguments like
+		--limit-rate=65536 to limit the download rate to 64KB/s.
+	
+	--blacklist/--whitelist <itag-id> - temporary blacklist/whitelist
+		video streams with the given itags for this video. This list
+		will be greped over, so when blacklisting/whitelisting more
+		than one itag, they must be in separate lines. It must
+		however be one argument.
+
+		Ex:
+		
+			$ dl-youtube --blacklist "35
+			45" <some-video-id>
+
+When downloading a video for the first time, the script will ask whether to
+accept the itag for this video. Answer with Y, to download the video in the
+"first" quality. The script then asks you whether to add that itag to the
+whitelist. Answer this question with N for now. The video will be downloaded
+in this quality anyways - but the next video downloaded with this itag will
+cause you to be asked again, you can then add it to the whitelist, or answer
+the first question with N, answer the question about blacklisting with Y and
+proceed with another itag. Maybe break after a few seconds of video stream
+downloading and check, whether your system is fast enough to playback in
+real time. On older systems you may want to blacklist some slow video
+formats. You may also blacklist, when the size/quality ratio is too high for
+you and you would rather like to save some space on disc at the expence of
+quality-loss.
+
+There is no official way yet to change the whitelist and blacklist (except
+for the command line arguments, which bypass the normal lists), but you can
+edit them with your $EDITOR. The lists reside under
+
+	~/.bothie/dl-youtube.itag-blacklist
+	~/.bothie/dl-youtube.itag-whitelist
+
+Have fun
