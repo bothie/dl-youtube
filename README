@@ -41,8 +41,16 @@ Syntax: dl-youtube [-O <video-name>] [-c] [--part <part>] [--from-playlist]
 	-c - continue download - passed to wget in the final video stream
 		downloading invocation
 	
-	--from-playlist - internally used. It's behavior is undefined.
-		DON'T USE IT.
+	--from-playlist - internally used. It's public behavior is undefined.
+		DON'T USE IT to obtain it's current behavior. The behavior
+		may change without any warnings.
+		Currently, this argument just adds a video number before the
+		video name in the filename for the download, counting up the
+		videos from zero. So, instead of the video file being called
+		"Some funny cat (...).flv" the video file will be called
+		"[03] Some funny cat (...).flv", assuming it's the 4th(sic!)
+		video on the command line and there are at least 11 videos
+		given on the command line.
 	
 	--wget - Pass the next argument to wget unmodified. It's bypassed
 		only to the final wget instance used to actually download the
