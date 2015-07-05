@@ -49,6 +49,13 @@ Syntax: dl-youtube [-O <video-name>] [-c] [--part <part>] [--from-playlist]
 		video stream. Could be used to give arguments like
 		--limit-rate=65536 to limit the download rate to 64KB/s.
 	
+	-nv - Make dl-youtuve be non-verbose like wget. This argument will be
+		passed down to wget in the invocation for the video stream
+		download, it's output will even be stripped down to not
+		include the actual hundeds of characters long video url.
+		Beside from this, dl-youtube won't produce any output except
+		for error messages.
+	
 	--blacklist/--whitelist <itag-id> - temporary blacklist/whitelist
 		video streams with the given itags for this video. This list
 		will be greped over, so when blacklisting/whitelisting more
