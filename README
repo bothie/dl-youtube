@@ -30,6 +30,20 @@ Syntax: dl-youtube [-O <video-name>] [-c] [--part <part>] [--from-playlist]
 		* $split is the ordinary number of the video - almost[TM]
 		  counting command line arguments,
 		* $itag is the video itag (i.e. resolution & quality).
+		
+		If downloading more than one video, you can change the name
+		at any point by giving another -O argument, which will then
+		be used for any following videos. For this to work, the -O
+		argument always has to be preceed all videos, which shall be
+		affected.
+		
+		Currently, the -O argument must be given before the video id
+		even if only one video id is given at all.
+		
+		Additionally, this name will be used for the directory, in
+		which a playlist will be downloaded to. Likewise for videos,
+		the play list's directory name will be completed by adding
+		" (Youtube: $pid)" where $pid is the playlist id.
 	
 	--part - when downloading 5 videos, and you break the script after
 		video 3 for instance and want to continue, you can drop the
