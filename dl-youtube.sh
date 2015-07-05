@@ -28,6 +28,7 @@ blacklist=""
 whitelist=""
 nv=false
 nv_arg=""
+nvq_arg="-nv"
 
 declare -a wget_extra_arguments
 declare -a dl_youtune_extra_arguments
@@ -85,6 +86,7 @@ do
 			dl_youtune_extra_arguments+=("-nv")
 			nv=true
 			nv_arg="-nv"
+			nvq_arg="-q"
 			continue
 			;;
 		
@@ -276,19 +278,19 @@ do
 	; do
 		case "$method" in
 			youtube-detailpage)
-				$WGET -nv -U "$USER_AGENT" "$info_page_url_detailpage" -O -
+				$WGET $nvq_arg -U "$USER_AGENT" "$info_page_url_detailpage" -O -
 				;;
 			
 			hidemyass.com-detailpage)
-				$WGET -nv "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_detailpage")" -O -
+				$WGET $nvq_arg "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_detailpage")" -O -
 				;;
 			
 			youtube-embedded)
-				$WGET -nv -U "$USER_AGENT" "$info_page_url_embedded" -O -
+				$WGET $nvq_arg -U "$USER_AGENT" "$info_page_url_embedded" -O -
 				;;
 			
 			hidemyass.com-embedded)
-				$WGET -nv "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_embedded")" -O -
+				$WGET $nvq_arg "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_embedded")" -O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
