@@ -215,6 +215,7 @@ do
 		echo "$1" | sed \
 			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/playlist?list=\(\(PL\|SP\)[-0-9A-Za-z]\+\)\(&.*$\)\?$_\4_'  \
 	)"
+	$nv || echo "plid=»$plid«"
 	if test "$(echo -n "$plid" | wc -c)" == 18 \
 	|| test "$(echo -n "$plid" | wc -c)" == 34
 	then
@@ -316,9 +317,12 @@ do
 		continue
 	fi
 	
-	for i in $(seq 1 1 $(get_infopage | get_var url_encoded_fmt_stream_map | get_size))
+	size="$(get_infopage_var url_encoded_fmt_stream_map | get_size)"
+	$nv || echo "Infopage url map size: $size"
+	for i in $(seq 1 1 $size)
 	do
-		get_infopage | get_var url_encoded_fmt_stream_map | get_index $i
+		index="$(get_infopage_var url_encoded_fmt_stream_map | get_index $i)"
+		$nv || echo "$index" | urldecode
 #		foreach($urls as $url)
 #		{
 #		$uc=explode(“&”,$url);
@@ -329,9 +333,9 @@ do
 #		$foundArray[$ul[1]] = $u.”&signature=”.$si[1];
 #		}
 		
-		url="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var url)"
-		itag="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var itag)"
-		sig="$(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var sig)"
+		url="$(echo "$index" | get_var url)"
+		itag="$(echo "$index" | get_var itag)"
+		sig="$(echo "$index" | get_var sig)"
 		url="$url&signature=$sig"
 		
 		ok=false
@@ -436,10 +440,10 @@ do
 				;;
 		esac
 		
-#		for name in $(get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_varnames)
+#		for name in $(echo "$index" | get_varnames)
 #		do
 #			echo -en "\t$name: "
-#			get_infopage | get_var url_encoded_fmt_stream_map | get_index $i | get_var $name
+#			echo "$index" | get_var $name
 #		done
 		
 		break
