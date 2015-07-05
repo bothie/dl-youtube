@@ -5,6 +5,8 @@
 # 	* USER_AGENT statt nur "Mozilla" auf "Mozilla/5.0 usw" gesetzt
 # 	* sig-Variable an video url anhängen - also url="$url&signature=$sig"
 
+set -o pipefail
+
 WGET=/usr/bin/wget
 USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1"
 
@@ -457,7 +459,15 @@ do
 		
 		case "$method" in
 			"youtube-embedded"|"youtube-detailpage")
-				$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || exit 2
+				if $nv
+				then
+					(
+						$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" 2>&1 \
+						| sed -e "s/^\([-0-9: ]\+\) URL:[^ ]* \(\[[0-9/]\+\] -> \".*\" \[[0-9]\+\]\)$/\1 YT:$vid \2/"
+					) || exit 2
+				else
+					$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || exit 2
+				fi
 				;;
 			
 			"hidemyass.com-embedded"|"hidemyass.com-detailpage")
