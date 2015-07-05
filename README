@@ -16,6 +16,7 @@ dl-youtube is free software as mandated by the GNU General Public
 License - Google for a copy.
 
 BEFORE YOU START: You also need the script urldecode for this script to work.
+	(currently but only temporarily included in this source distribution)
 
 Syntax: dl-youtube [-O <video-name>] [-c] [--part <part>] [--from-playlist]
 		[--wget <wget-argument>] [--blacklist <itag-id>]
