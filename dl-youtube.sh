@@ -249,8 +249,8 @@ do
 	t got vid "$vid"
 	if test "$(echo -n "$vid" | wc -c)" != 11
 	then
-		echo "Couldn't parse the argument (got $vid). Please try to just give the video id (the 11 digits and letters)"
-		exit 2
+		echo "Couldn't parse the argument ($1 -> $vid). Please try to just give the video id (the 11 digits and letters)" >&2
+		continue
 	fi
 	
 	t dl infopage "$vid"
