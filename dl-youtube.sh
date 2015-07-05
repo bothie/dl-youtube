@@ -26,6 +26,7 @@ blacklist=""
 whitelist=""
 
 declare -a wget_extra_arguments
+declare -a dl_youtune_extra_arguments
 
 while $processed_arg
 do
@@ -50,6 +51,7 @@ do
 		"-c")
 			processed_arg=true
 			cont="-c"
+			dl_youtune_extra_arguments+=("$1")
 			shift
 			continue
 			;;
@@ -66,6 +68,8 @@ do
 			shift
 			echo "Found wget argument $1"
 			wget_extra_arguments+=("$1")
+			dl_youtune_extra_arguments+=("--wget")
+			dl_youtune_extra_arguments+=("$1")
 			shift
 			continue
 			;;
@@ -74,6 +78,8 @@ do
 			processed_arg=true
 			shift
 			blacklist="$1"
+			dl_youtune_extra_arguments+=("--blacklist")
+			dl_youtune_extra_arguments+=("$1")
 			shift
 			continue
 			;;
@@ -82,6 +88,8 @@ do
 			processed_arg=true
 			shift
 			whitelist="$1"
+			dl_youtune_extra_arguments+=("--whitelist")
+			dl_youtune_extra_arguments+=("$1")
 			shift
 			continue
 			;;
@@ -208,7 +216,7 @@ do
 		test -d "$dir" || mkdir "$dir" || continue
 		(
 			cd "$dir"
-			dl-youtube $cont --from-playlist $(
+			dl-youtube "${dl_youtune_extra_arguments[@]}" --from-playlist $(
 				grep "^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*$" "../$plid.play-list.html" \
 				| sed -e "s!^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*\$!\1!"
 			)
