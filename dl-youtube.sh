@@ -13,7 +13,7 @@ hidemyass_domain=1.hidemyass.com
 t () {
 	settitle "[$video_num/$num_args] $*"
 #	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ [$video_num/$num_args] $*"
-	echo "$*"
+	$nv || echo "$*"
 }
 
 processed_arg=true
@@ -24,6 +24,8 @@ cont=""
 from_playlist=false
 blacklist=""
 whitelist=""
+nv=false
+nv_arg=""
 
 declare -a wget_extra_arguments
 declare -a dl_youtune_extra_arguments
@@ -74,6 +76,16 @@ do
 			continue
 			;;
 		
+		"-nv")
+			processed_arg=true
+			shift
+			wget_extra_arguments+=("-nv")
+			dl_youtune_extra_arguments+=("-nv")
+			nv=true
+			nv_arg="-nv"
+			continue
+			;;
+		
 		"--blacklist")
 			processed_arg=true
 			shift
@@ -111,7 +123,7 @@ if test $num_args -gt  1000; then num_digits=4; fi
 if test $num_args -gt 10000; then num_digits=5; fi
 
 urlencode () {
-	echo ">>> urlencode" >&2
+	$nv || echo ">>> urlencode" >&2
 	if test -n "$(type -p httpencode)"
 	then
 		(
@@ -132,11 +144,11 @@ urlencode () {
 					-e 's/=/%3D/g' \
 			
 			)"
-			echo "»$url« -> »$result«" >&2
+			$nv || echo "»$url« -> »$result«" >&2
 			echo "$result"
 		done
 	fi
-	echo "<<< urlencode" >&2
+	$nv || echo "<<< urlencode" >&2
 }
 
 get_infopage () {
@@ -207,12 +219,12 @@ do
 		shift
 		
 		t got playlist id "$plid"
-		$WGET "http://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.html" || continue
+		$WGET $nv_arg "http://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.html" || continue
 		title="$(
 			grep "og:title" "$plid.play-list.html" | sed -e 's/^ *<meta property="og:title" content="\([^"]\+\)">.*$/\1/' -e 's!/!_!g'
 		)"
 		dir="$title (Youtube: $plid)"
-		echo "Downloading playlist into $dir"
+		$nv || echo "Downloading playlist into $dir"
 		test -d "$dir" || mkdir "$dir" || continue
 		(
 			cd "$dir"
@@ -239,18 +251,18 @@ do
 	fi
 	
 	t dl infopage "$vid"
-	echo "Downloading Info page for video (vid=$vid) ..." >&2
+	$nv || echo "Downloading Info page for video (vid=$vid) ..." >&2
 	info_page_url="http://www.youtube.com/get_video_info?&video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en"
 	
 	for method in "youtube" "hidemyass.com"
 	do
 		case "$method" in
 			youtube)
-				$WGET -U "$USER_AGENT" -nv "$info_page_url" -O -
+				$WGET -nv -U "$USER_AGENT" -nv "$info_page_url" -O -
 				;;
 			
 			hidemyass.com)
-				$WGET "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url")" -O -
+				$WGET -nv "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url")" -O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
@@ -324,19 +336,19 @@ do
 		
 		if echo "$whitelist" | grep "^$itag$" >/dev/null 2>&1
 		then
-			echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
+			$nv || echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
 			ok=true
 		else
 			if echo "$blacklist" | grep "^$itag$" >/dev/null 2>&1
 			then
-				echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
+				$nv || echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
 				continue
 			fi
 		fi
 		
 		if ! $ok && grep "^$itag$" ~/.bothie/dl-youtube.itag-whitelist >/dev/null 2>&1
 		then
-			echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
+			$nv || echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
 			ok=true
 		fi
 		
@@ -345,7 +357,7 @@ do
 			ok=true
 			if grep "^$itag$" ~/.bothie/dl-youtube.itag-blacklist >/dev/null 2>&1
 			then
-				echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
+				$nv || echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
 				ok=false
 			fi
 			if $ok
@@ -406,8 +418,11 @@ do
 		name="$output"
 		
 		t Downloading video to "$name"
-		echo -n "Downloading actual video to " >&2
-		echo "$name"
+		if ! $nv
+		then
+			echo -n "Downloading actual video to " >&2
+			echo "$name"
+		fi
 		
 		sleep 1
 		
