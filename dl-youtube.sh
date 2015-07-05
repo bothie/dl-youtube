@@ -10,6 +10,8 @@ USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.1 (KHTML, like Gecko
 
 hidemyass_domain=1.hidemyass.com
 
+. unicode_unification
+
 t () {
 	settitle "[$video_num/$num_args] $*"
 #	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ [$video_num/$num_args] $*"
@@ -284,7 +286,7 @@ do
 		then
 			base="fail"
 		else
-			base="$(get_infopage_var title | sed -e 's!/!_!g')"
+			base="$(get_infopage_var title | sed -e 's!/!_!g' | unicode_unification)"
 		fi
 	fi
 	
