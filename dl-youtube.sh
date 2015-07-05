@@ -336,7 +336,7 @@ do
 		url="$(echo "$index" | get_var url)"
 		itag="$(echo "$index" | get_var itag)"
 		sig="$(echo "$index" | get_var sig)"
-		url="$url&signature=$sig"
+		test -n "$sig" && url="$url&signature=$sig"
 		
 		ok=false
 		
