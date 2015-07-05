@@ -251,8 +251,8 @@ do
 	
 	vid="$(
 		echo "$1" | sed \
-			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/watch?\(.*&\)\?v=\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\5_' \
-			-e 's_^\(https\?://\)\?\(www\.\)\?youtube\(-nocookie\)\?\.com/\(v\|embed\)/\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\5_' \
+			-e 's_^\(https\?://\)\?\(www\.\)\?youtu\(be\(-nocookie\)\?\.com\|\.be\)/watch?\(.*&\)\?v=\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\6_' \
+			-e 's_^\(https\?://\)\?\(www\.\)\?youtu\(be\(-nocookie\)\?\.com\|\.be\)/\(\(v\|embed\)/\)\?\([-_0-9a-zA-Z]\+\)\([#&].*$\)\?_\7_' \
 	)"
 	shift
 	
