@@ -255,17 +255,30 @@ do
 	
 	t dl infopage "$vid"
 	$nv || echo "Downloading Info page for video (vid=$vid) ..." >&2
-	info_page_url="http://www.youtube.com/get_video_info?&video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en"
+	info_page_url_detailpage="http://www.youtube.com/get_video_info?video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en"
+	info_page_url_embedded="http://www.youtube.com/get_video_info?el=embedded&video_id=$vid"
 	
-	for method in "youtube" "hidemyass.com"
-	do
+	for method in \
+		"youtube-embedded" \
+		"hidemyass.com-embedded" \
+		"youtube-detailpage" \
+		"hidemyass.com-detailpage" \
+	; do
 		case "$method" in
-			youtube)
-				$WGET -nv -U "$USER_AGENT" -nv "$info_page_url" -O -
+			youtube-detailpage)
+				$WGET -nv -U "$USER_AGENT" "$info_page_url_detailpage" -O -
 				;;
 			
-			hidemyass.com)
-				$WGET -nv "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url")" -O -
+			hidemyass.com-detailpage)
+				$WGET -nv "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_detailpage")" -O -
+				;;
+			
+			youtube-embedded)
+				$WGET -nv -U "$USER_AGENT" "$info_page_url_embedded" -O -
+				;;
+			
+			hidemyass.com-embedded)
+				$WGET -nv "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_embedded")" -O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
@@ -273,7 +286,7 @@ do
 		then
 			break
 		fi
-		echo -en "\e[31m" >&2
+		echo -en "\e[31mTried to download %vid using method $method: " >&2
 		get_infopage_var reason
 		echo -en "\e[0m" >&2
 		let pass=pass+1
@@ -431,11 +444,11 @@ do
 		sleep 1
 		
 		case "$method" in
-			youtube)
+			"youtube-embedded"|"youtube-detailpage")
 				$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || exit 2
 				;;
 			
-			hidemyass.com)
+			"hidemyass.com-embedded"|"hidemyass.com-detailpage")
 				$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" || exit 2
 				;;
 		esac
