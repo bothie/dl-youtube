@@ -237,8 +237,13 @@ do
 		(
 			cd "$dir"
 			dl-youtube "${dl_youtune_extra_arguments[@]}" --from-playlist $(
-				grep "^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*$" "../$plid.play-list.html" \
-				| sed -e "s!^.*\"/watch?v=\(...........\)&amp;list=$plid&amp;index.*\$!\1!"
+				regex1="^.*a href=\"/watch?v=\(...........\)&amp;list=$plid&amp;index=[0-9]\+.*"
+				regex2="^.*a href=\"/watch?v=\(...........\)&amp;index=[0-9]\+&amp;list=$plid\".*"
+				grep "$regex1\|$regex2" "../$plid.play-list.html" \
+				| sed \
+					-e "s!$regex1!\1!" \
+					-e "s!$regex2!\1!" \
+				
 			)
 		)
 		continue
