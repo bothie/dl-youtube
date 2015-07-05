@@ -59,25 +59,29 @@ Syntax: dl-youtube [-O <video-name>] [-c] [--part <part>] [--from-playlist]
 			$ dl-youtube --blacklist "35
 			45" <some-video-id>
 
-When downloading a video for the first time, the script will ask whether to
-accept the itag for this video. Answer with Y, to download the video in the
-"first" quality. The script then asks you whether to add that itag to the
-whitelist. Answer this question with N for now. The video will be downloaded
-in this quality anyways - but the next video downloaded with this itag will
-cause you to be asked again, you can then add it to the whitelist, or answer
-the first question with N, answer the question about blacklisting with Y and
-proceed with another itag. Maybe break after a few seconds of video stream
-downloading and check, whether your system is fast enough to playback in
-real time. On older systems you may want to blacklist some slow video
-formats. You may also blacklist, when the size/quality ratio is too high for
-you and you would rather like to save some space on disc at the expence of
-quality-loss.
-
-There is no official way yet to change the whitelist and blacklist (except
-for the command line arguments, which bypass the normal lists), but you can
-edit them with your $EDITOR. The lists reside under
-
-	~/.bothie/dl-youtube.itag-blacklist
-	~/.bothie/dl-youtube.itag-whitelist
+		When downloading a video for the first time, the script will
+		ask whether to accept the itag for this video. Answer with Y,
+		to download the video in the "first" quality. The script then
+		asks you whether to add that itag to the whitelist. Answer
+		this question with N for now. The video will be downloaded in
+		this quality anyways - but the next video downloaded with this
+		itag will cause you to be asked again, you can then add it to
+		the whitelist, or answer the first question with N, answer the
+		question about blacklisting with Y and proceed with another
+		itag. Maybe break after a few seconds of video stream
+		downloading and check, whether your system is fast enough to
+		playback in real time. On older systems you may want to
+		blacklist some slow video formats. You may also blacklist,
+		when the size/quality ratio is too high for you and you would
+		rather like to save some space on disc at the expence of
+		quality-loss.
+		
+		There is no official way yet to change the whitelist and
+		blacklist (except for the command line arguments, which
+		bypass the normal lists), but you can edit them with your
+		$EDITOR. The lists reside under
+		
+			~/.bothie/dl-youtube.itag-blacklist
+			~/.bothie/dl-youtube.itag-whitelist
 
 Have fun
