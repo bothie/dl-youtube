@@ -223,9 +223,14 @@ do
 		
 		t got playlist id "$plid"
 		$WGET $nv_arg "http://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.html" || continue
-		title="$(
-			grep "og:title" "$plid.play-list.html" | sed -e 's/^ *<meta property="og:title" content="\([^"]\+\)">.*$/\1/' -e 's!/!_!g'
-		)"
+		if test -n "$name_base"
+		then
+			title="$name_base"
+		else
+			title="$(
+				grep 'title" content="[^"]*"' "$plid.play-list.html" | sed -e 's/^.*title" content="\([^"]*\)".*$/\1/'
+			)"
+		fi
 		dir="$title (Youtube: $plid)"
 		$nv || echo "Downloading playlist into $dir"
 		test -d "$dir" || mkdir "$dir" || continue
