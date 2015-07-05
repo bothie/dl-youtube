@@ -370,17 +370,15 @@ do
 				then
 					ok=false
 				fi
-				extendlist=$(readyn "Add this choice to $(
-					$accept && echo -n "whitelist" || echo -n "blacklist"
-				) (y/n)?")
+				if $accept
+				then
+					list="whitelist"
+				else
+					list="blacklist"
+				fi
+				extendlist=$(readyn "Add this choice to $list (y/n)?")
 				if $extendlist
 				then
-					if $accept
-					then
-						list="whitelist"
-					else
-						list="blacklist"
-					fi
 					if ! test -d ~/.bothie
 					then
 						mkdir ~/.bothie
