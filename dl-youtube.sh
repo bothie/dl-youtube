@@ -438,7 +438,7 @@ do
 					output="$base$split_youtube.$itag.flv.$collision_protect_num"
 				done
 			fi
-			touch "$output" && break
+			touch -- "$output" && break
 			base="$( printf "%.$(( $(echo -n "$base" | wc -c) - 1 ))s" "$base" )"
 			if test -z "$base"
 			then
