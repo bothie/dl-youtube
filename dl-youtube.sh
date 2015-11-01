@@ -361,15 +361,6 @@ do
 	do
 		index="$(get_infopage_var url_encoded_fmt_stream_map | get_index $i)"
 		$nv || echo "$index" | urldecode
-#		foreach($urls as $url)
-#		{
-#		$uc=explode(“&”,$url);
-#		$um=explode(“=”,$uc[1]);
-#		$ul=explode(“=”,$uc[0]);
-#		$si=explode(“=”,$uc[4]);
-#		$u = urldecode($um[1]);
-#		$foundArray[$ul[1]] = $u.”&signature=”.$si[1];
-#		}
 		
 		url="$(echo "$index" | get_var url)"
 		itag="$(echo "$index" | get_var itag)"
@@ -493,12 +484,6 @@ do
 		then
 			break
 		fi
-		
-#		for name in $(echo "$index" | get_varnames)
-#		do
-#			echo -en "\t$name: "
-#			echo "$index" | get_var $name
-#		done
 	done
 	
 	if ! $download_ok
