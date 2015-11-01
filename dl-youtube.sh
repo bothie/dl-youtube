@@ -203,6 +203,8 @@ readyn () {
 	fi
 }
 
+num_videos_failed=0
+
 while test -n "$1"
 do
 	if test "X-O" = "X$1"
@@ -464,14 +466,15 @@ do
 					(
 						$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" 2>&1 \
 						| sed -e "s/^\([-0-9: ]\+\) URL:[^ ]* \(\[[0-9/]\+\] -> \".*\" \[[0-9]\+\]\)$/\1 YT:$vid \2/"
-					) || exit 2
+					) || let num_videos_failed=num_videos_failed+1
 				else
-					$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || exit 2
+					$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || let num_videos_failed=num_videos_failed+1
 				fi
 				;;
 			
 			"hidemyass.com-embedded"|"hidemyass.com-detailpage")
-				$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" || exit 2
+				$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" \
+				|| let num_videos_failed=num_videos_failed+1
 				;;
 		esac
 		
@@ -487,3 +490,10 @@ do
 	test -s "$name" && rm "./$vid.info-page"
 done
 t ""
+if test "$num_videos_failed" = 0
+then
+	exit 0
+else
+	echo "$num_videos_failed videos failed to download"
+	exit 3
+fi
