@@ -302,7 +302,7 @@ do
 		then
 			break
 		fi
-		echo -en "\e[31mTried to download %vid using method $method: " >&2
+		echo -en "\e[31mTried to download $vid using method $method: " >&2
 		get_infopage_var reason
 		echo -en "\e[0m" >&2
 	done
