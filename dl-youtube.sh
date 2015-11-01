@@ -314,184 +314,185 @@ do
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
+		
 		if test "$(get_infopage_var status)" == "ok"
 		then
-			method_ok=true
-			break
-		fi
-		echo -en "\e[31mTried to download $vid using method $method: " >&2
-		get_infopage_var reason
-		echo -en "\e[0m" >&2
-		rm "./$vid.info-page"
-	done
-	
-	if ! $method_ok
-	then
-		continue
-	fi
-	
-	base="$name_base"
-	
-	if test -z "$base"
-	then
-		base="$(get_infopage_var title | sed -e 's!/!_!g' | unicode_unification)"
-	fi
-	
-	if test -z "$base"
-	then
-		base="$vid"
-		split_youtube=""
-	fi
-	
-	if $from_playlist
-	then
-		base="$(printf "[%0*i] %s" $num_digits $this_video_num "$base")"
-	fi
-	
-	if $add_part_num
-	then
-		split_youtube=" (Split+Youtube: $this_part+$vid)"
-	else
-		split_youtube=" (Youtube: $vid)"
-	fi
-	
-	size="$(get_infopage_var url_encoded_fmt_stream_map | get_size)"
-	$nv || echo "Infopage url map size: $size"
-	for i in $(seq 1 1 $size)
-	do
-		index="$(get_infopage_var url_encoded_fmt_stream_map | get_index $i)"
-		$nv || echo "$index" | urldecode
-		
-		url="$(echo "$index" | get_var url)"
-		itag="$(echo "$index" | get_var itag)"
-		sig="$(echo "$index" | get_var sig)"
-		test -n "$sig" && url="$url&signature=$sig"
-		
-		ok=false
-		
-		if echo "$whitelist" | grep "^$itag$" >/dev/null 2>&1
-		then
-			$nv || echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
-			ok=true
-		else
-			if echo "$blacklist" | grep "^$itag$" >/dev/null 2>&1
+			base="$name_base"
+			
+			if test -z "$base"
 			then
-				$nv || echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
-				continue
+				base="$(get_infopage_var title | sed -e 's!/!_!g' | unicode_unification)"
 			fi
-		fi
-		
-		if ! $ok && grep "^$itag$" ~/.bothie/dl-youtube.itag-whitelist >/dev/null 2>&1
-		then
-			$nv || echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
-			ok=true
-		fi
-		
-		if ! $ok
-		then
-			ok=true
-			if grep "^$itag$" ~/.bothie/dl-youtube.itag-blacklist >/dev/null 2>&1
-			then
-				$nv || echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
-				ok=false
-			fi
-			if $ok
-			then
-				echo "itag=$itag is neither in ~/.bothie/dl-youtube.itag-whitelist nor in ~/.bothie/dl-youtube.itag-blacklist"
-				accept=$(readyn "Do you want to accept this itag (y/n)?")
-				if ! $accept
-				then
-					ok=false
-				fi
-				if $accept
-				then
-					list="whitelist"
-				else
-					list="blacklist"
-				fi
-				extendlist=$(readyn "Add this choice to $list (y/n)?")
-				if $extendlist
-				then
-					if ! test -d ~/.bothie
-					then
-						mkdir ~/.bothie
-					fi
-					echo "$itag" >> ~/.bothie/dl-youtube.itag-$list
-				fi
-			fi
-		fi
-		
-		if ! $ok
-		then
-			continue
-		fi
-		
-		while true
-		do
-			output="$base$split_youtube.$itag.flv"
-			if test -z "$cont"
-			then
-				let collision_protect_num=0
-				while test -e "$output" \
-				&& ( ! test -f "$output" \
-				||     test -s "$output" )
-				do
-					let collision_protect_num=collision_protect_num+1
-					output="$base$split_youtube.$itag.flv.$collision_protect_num"
-				done
-			fi
-			touch -- "$output" && break
-			base="$( printf "%.$(( $(echo -n "$base" | wc -c) - 1 ))s" "$base" )"
+			
 			if test -z "$base"
 			then
 				base="$vid"
 				split_youtube=""
 			fi
-		done
-		name="$output"
-		
-		t Downloading video to "$name"
-		if ! $nv
-		then
-			echo -n "Downloading actual video to " >&2
-			echo "$name"
-		fi
-		
-		sleep 1
-		
-		download_ok=true
-		
-		case "$method" in
-			"youtube-embedded"|"youtube-detailpage")
-				if $nv
-				then
-					(
-						$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" 2>&1 \
-						| sed -e "s/^\([-0-9: ]\+\) URL:[^ ]* \(\[[0-9/]\+\] -> \".*\" \[[0-9]\+\]\)$/\1 YT:$vid \2/"
-					) || download_ok=false
-				else
-					$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || download_ok=false
-				fi
-				;;
 			
-			"hidemyass.com-embedded"|"hidemyass.com-detailpage")
-				$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" \
-				|| download_ok=false
-				;;
-		esac
-		
-		if $download_ok
-		then
-			break
+			if $from_playlist
+			then
+				base="$(printf "[%0*i] %s" $num_digits $this_video_num "$base")"
+			fi
+			
+			if $add_part_num
+			then
+				split_youtube=" (Split+Youtube: $this_part+$vid)"
+			else
+				split_youtube=" (Youtube: $vid)"
+			fi
+			
+			size="$(get_infopage_var url_encoded_fmt_stream_map | get_size)"
+			$nv || echo "Infopage url map size: $size"
+			for i in $(seq 1 1 $size)
+			do
+				index="$(get_infopage_var url_encoded_fmt_stream_map | get_index $i)"
+				$nv || echo "$index" | urldecode
+				
+				url="$(echo "$index" | get_var url)"
+				itag="$(echo "$index" | get_var itag)"
+				sig="$(echo "$index" | get_var sig)"
+				test -n "$sig" && url="$url&signature=$sig"
+				
+				ok=false
+				
+				if echo "$whitelist" | grep "^$itag$" >/dev/null 2>&1
+				then
+					$nv || echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
+					ok=true
+				else
+					if echo "$blacklist" | grep "^$itag$" >/dev/null 2>&1
+					then
+						$nv || echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
+						continue
+					fi
+				fi
+				
+				if ! $ok && grep "^$itag$" ~/.bothie/dl-youtube.itag-whitelist >/dev/null 2>&1
+				then
+					$nv || echo -e "\e[32mUsing whitelisted itag $itag\e[0m"
+					ok=true
+				fi
+				
+				if ! $ok
+				then
+					ok=true
+					if grep "^$itag$" ~/.bothie/dl-youtube.itag-blacklist >/dev/null 2>&1
+					then
+						$nv || echo -e "\e[31mSkipping blacklisted itag $itag\e[0m"
+						ok=false
+					fi
+					if $ok
+					then
+						echo "itag=$itag is neither in ~/.bothie/dl-youtube.itag-whitelist nor in ~/.bothie/dl-youtube.itag-blacklist"
+						accept=$(readyn "Do you want to accept this itag (y/n)?")
+						if ! $accept
+						then
+							ok=false
+						fi
+						if $accept
+						then
+							list="whitelist"
+						else
+							list="blacklist"
+						fi
+						extendlist=$(readyn "Add this choice to $list (y/n)?")
+						if $extendlist
+						then
+							if ! test -d ~/.bothie
+							then
+								mkdir ~/.bothie
+							fi
+							echo "$itag" >> ~/.bothie/dl-youtube.itag-$list
+						fi
+					fi
+				fi
+				
+				if ! $ok
+				then
+					continue
+				fi
+				
+				while true
+				do
+					output="$base$split_youtube.$itag.flv"
+					if test -z "$cont"
+					then
+						let collision_protect_num=0
+						while test -e "$output" \
+						&& ( ! test -f "$output" \
+						||     test -s "$output" )
+						do
+							let collision_protect_num=collision_protect_num+1
+							output="$base$split_youtube.$itag.flv.$collision_protect_num"
+						done
+					fi
+					touch -- "$output" && break
+					base="$( printf "%.$(( $(echo -n "$base" | wc -c) - 1 ))s" "$base" )"
+					if test -z "$base"
+					then
+						base="$vid"
+						split_youtube=""
+					fi
+				done
+				name="$output"
+				
+				t Downloading video to "$name"
+				if ! $nv
+				then
+					echo -n "Downloading actual video to " >&2
+					echo "$name"
+				fi
+				
+				sleep 1
+				
+				download_ok=true
+				
+				case "$method" in
+					"youtube-embedded"|"youtube-detailpage")
+						if $nv
+						then
+							(
+								$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" 2>&1 \
+								| sed -e "s/^\([-0-9: ]\+\) URL:[^ ]* \(\[[0-9/]\+\] -> \".*\" \[[0-9]\+\]\)$/\1 YT:$vid \2/"
+							) || download_ok=false
+						else
+							$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || download_ok=false
+						fi
+						;;
+					
+					"hidemyass.com-embedded"|"hidemyass.com-detailpage")
+						$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" \
+						|| download_ok=false
+						;;
+				esac
+				
+				if $download_ok
+				then
+					break
+				fi
+			done
+			
+			if $download_ok
+			then
+				method_ok=true
+				break
+			fi
+			
+			fail_reason="WGET failed"
+		else
+			fail_reason="$(get_infopage_var reason)"
 		fi
+		echo -en "\e[31mTried to download $vid using method $method: $fail_reason\e[0m" >&2
 	done
 	
-	if ! $download_ok
+	rm "./$vid.info-page"
+	
+	if ! $method_ok
 	then
 		let num_videos_failed=num_videos_failed+1
+		continue
 	fi
-	
-	test -s "$name" && rm "./$vid.info-page"
 done
 t ""
 if test "$num_videos_failed" = 0
