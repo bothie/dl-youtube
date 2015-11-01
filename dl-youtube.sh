@@ -305,7 +305,6 @@ do
 		echo -en "\e[31mTried to download %vid using method $method: " >&2
 		get_infopage_var reason
 		echo -en "\e[0m" >&2
-		let pass=pass+1
 	done
 	
 	base="$name_base"
