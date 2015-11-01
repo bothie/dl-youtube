@@ -274,6 +274,7 @@ do
 	info_page_url_detailpage="http://www.youtube.com/get_video_info?video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en"
 	info_page_url_embedded="http://www.youtube.com/get_video_info?el=embedded&video_id=$vid"
 	
+	method_ok=false
 	for method in \
 		"youtube-embedded" \
 		"hidemyass.com-embedded" \
@@ -300,23 +301,25 @@ do
 /g' > "./$vid.info-page"
 		if test "$(get_infopage_var status)" == "ok"
 		then
+			method_ok=true
 			break
 		fi
 		echo -en "\e[31mTried to download $vid using method $method: " >&2
 		get_infopage_var reason
 		echo -en "\e[0m" >&2
+		rm "./$vid.info-page"
 	done
+	
+	if ! $method_ok
+	then
+		continue
+	fi
 	
 	base="$name_base"
 	
 	if test -z "$base"
 	then
-		if test "$(get_infopage_var status)" != "ok"
-		then
-			base="fail"
-		else
-			base="$(get_infopage_var title | sed -e 's!/!_!g' | unicode_unification)"
-		fi
+		base="$(get_infopage_var title | sed -e 's!/!_!g' | unicode_unification)"
 	fi
 	
 	if test -z "$base"
@@ -337,12 +340,6 @@ do
 		let part=part+1
 	else
 		split_youtube=" (Youtube: $vid)"
-	fi
-	
-	if test "$(get_infopage_var status)" != "ok"
-	then
-		rm "./$vid.info-page"
-		continue
 	fi
 	
 	size="$(get_infopage_var url_encoded_fmt_stream_map | get_size)"
