@@ -15,8 +15,8 @@ hidemyass_domain=1.hidemyass.com
 . unicode_unification
 
 t () {
-	settitle "[$video_num/$num_args] $*"
-#	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ [$video_num/$num_args] $*"
+	settitle "[$this_video_num/$num_args] $*"
+#	settitle "[${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}]$ [$this_video_num/$num_args] $*"
 	$nv || echo "$*"
 }
 
@@ -24,6 +24,7 @@ processed_arg=true
 
 name_base=""
 part=1
+add_part_num=false
 cont=""
 from_playlist=false
 blacklist=""
@@ -43,6 +44,7 @@ do
 			processed_arg=true
 			shift
 			name_base="$1"
+			add_part_num=true
 			shift
 			continue
 			;;
@@ -51,6 +53,7 @@ do
 			processed_arg=true
 			shift
 			part="$1"
+			add_part_num=true
 			shift
 			continue
 			;;
@@ -274,6 +277,18 @@ do
 	info_page_url_detailpage="http://www.youtube.com/get_video_info?video_id=$vid&el=detailpage&ps=default&eurl=&gl=US&hl=en"
 	info_page_url_embedded="http://www.youtube.com/get_video_info?el=embedded&video_id=$vid"
 	
+	if $from_playlist
+	then
+		this_video_num="$video_num"
+		let video_num=video_num+1
+	fi
+	
+	if $add_part_num
+	then
+		this_part="$part"
+		let part=part+1
+	fi
+	
 	method_ok=false
 	for method in \
 		"youtube-embedded" \
@@ -330,14 +345,12 @@ do
 	
 	if $from_playlist
 	then
-		base="$(printf "[%0*i] %s" $num_digits $video_num "$base")"
-		let video_num=video_num+1
+		base="$(printf "[%0*i] %s" $num_digits $this_video_num "$base")"
 	fi
 	
-	if test -n "$name_base" || test $part != 1
+	if $add_part_num
 	then
-		split_youtube=" (Split+Youtube: $part+$vid)"
-		let part=part+1
+		split_youtube=" (Split+Youtube: $this_part+$vid)"
 	else
 		split_youtube=" (Youtube: $vid)"
 	fi
