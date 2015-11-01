@@ -468,6 +468,8 @@ do
 		
 		sleep 1
 		
+		download_ok=true
+		
 		case "$method" in
 			"youtube-embedded"|"youtube-detailpage")
 				if $nv
@@ -475,26 +477,34 @@ do
 					(
 						$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" 2>&1 \
 						| sed -e "s/^\([-0-9: ]\+\) URL:[^ ]* \(\[[0-9/]\+\] -> \".*\" \[[0-9]\+\]\)$/\1 YT:$vid \2/"
-					) || let num_videos_failed=num_videos_failed+1
+					) || download_ok=false
 				else
-					$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || let num_videos_failed=num_videos_failed+1
+					$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || download_ok=false
 				fi
 				;;
 			
 			"hidemyass.com-embedded"|"hidemyass.com-detailpage")
 				$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" \
-				|| let num_videos_failed=num_videos_failed+1
+				|| download_ok=false
 				;;
 		esac
+		
+		if $download_ok
+		then
+			break
+		fi
 		
 #		for name in $(echo "$index" | get_varnames)
 #		do
 #			echo -en "\t$name: "
 #			echo "$index" | get_var $name
 #		done
-		
-		break
 	done
+	
+	if ! $download_ok
+	then
+		let num_videos_failed=num_videos_failed+1
+	fi
 	
 	test -s "$name" && rm "./$vid.info-page"
 done
