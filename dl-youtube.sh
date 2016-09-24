@@ -10,6 +10,9 @@ set -o pipefail
 WGET=/usr/bin/wget
 USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1"
 
+NL="
+"
+
 hidemyass_domain=1.hidemyass.com
 
 . unicode_unification
@@ -131,6 +134,10 @@ if test $num_args -gt   100; then num_digits=3; fi
 if test $num_args -gt  1000; then num_digits=4; fi
 if test $num_args -gt 10000; then num_digits=5; fi
 
+dir_encode () {
+	echo "$@" | sed -e 's:/:\\:g'
+}
+
 urlencode () {
 	$nv || echo ">>> urlencode" >&2
 	if test -n "$(type -p httpencode)"
@@ -231,16 +238,53 @@ do
 		shift
 		
 		t got playlist id "$plid"
-		$WGET $nv_arg "https://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.html" || continue
+		num=1
+		$WGET $nv_arg "https://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.$num.html" || continue
 		if test -n "$name_base"
 		then
 			title="$name_base"
 		else
 			title="$(
-				grep 'title" content="[^"]*"' "$plid.play-list.html" | sed -e 's/^.*title" content="\([^"]*\)".*$/\1/'
+				grep 'title" content="[^"]*"' "$plid.play-list.$num.html" | sed -e 's/^.*title" content="\([^"]*\)".*$/\1/'
 			)"
 		fi
-		dir="$title (Youtube: $plid)"
+		dir="$(dir_encode "$title") (Youtube: $plid)"
+		while test -n "$(
+			cat "$plid.play-list.$num.html" \
+			| grep action_continuation \
+			| sed -e 's#.*"\(/browse_ajax?action_continuation=1[^"]\+\)\\\?".*#\1#' \
+			| urldecode \
+			| urldecode \
+			| sed -e 's/&amp;/\&/'
+		)"
+		do
+			let next_num=num+1
+			
+			$WGET $nv_arg "$(
+				echo -n "https://www.youtube.com"
+				cat "$plid.play-list.$num.html" \
+				| grep action_continuation \
+				| sed -e 's#.*"\(/browse_ajax?action_continuation=1[^"]\+\)\\\?".*#\1#' \
+				| urldecode \
+				| urldecode \
+				| sed -e 's/&amp;/\&/'
+			)" -O - \
+			| python -m json.tool \
+			| tee "$plid.play-list.$next_num.json" \
+			| grep '^ *"content_html": ' \
+			| sed \
+				-e 's/\\"/"/g' \
+				-e "s/\\\\n/\\$NL/g" \
+			> "$plid.play-list.$next_num.html"
+			
+			grep '^ *"load_more_widget_html": ' "$plid.play-list.$next_num.json" \
+			| sed \
+				-e 's/\\"/"/g' \
+				-e "s/\\\\n/\\$NL/g" \
+			>> "$plid.play-list.$next_num.html"
+			
+			num="$next_num"
+		done
 		$nv || echo "Downloading playlist into $dir"
 		test -d "$dir" || mkdir "$dir" || continue
 		(
@@ -248,7 +292,10 @@ do
 			dl-youtube "${dl_youtune_extra_arguments[@]}" --from-playlist $(
 				regex1="^.*a href=\"/watch?v=\(...........\)&amp;list=$plid&amp;index=[0-9]\+.*"
 				regex2="^.*a href=\"/watch?v=\(...........\)&amp;index=[0-9]\+&amp;list=$plid\".*"
-				grep "$regex1\|$regex2" "../$plid.play-list.html" \
+				for n in $(seq 1 1 $num)
+				do
+					grep "$regex1\|$regex2" "../$plid.play-list.$n.html"
+				done \
 				| sed \
 					-e "s!$regex1!\1!" \
 					-e "s!$regex2!\1!" \
