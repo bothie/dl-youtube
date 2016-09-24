@@ -231,7 +231,7 @@ do
 		shift
 		
 		t got playlist id "$plid"
-		$WGET $nv_arg "http://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.html" || continue
+		$WGET $nv_arg "https://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.html" || continue
 		if test -n "$name_base"
 		then
 			title="$name_base"
