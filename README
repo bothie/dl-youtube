@@ -9,8 +9,7 @@ While this alone is a tedious job, doing it in a programming language you
 don't understand is even more difficult. Additionally, I couldn't really
 understand, why a simple download script takes almost 40KB of code. So I
 wrote a new bash script - in it's first version smaller than 3KB - it now
-evolved to being able to download full playlists and automagically
-downloading videos using hidemyass.com to bypass censorship of your country.
+evolved to being able to download full playlists.
 
 dl-youtube is free software as mandated by the GNU General Public
 License - Google for a copy.

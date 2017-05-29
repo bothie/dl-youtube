@@ -13,8 +13,6 @@ USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.1 (KHTML, like Gecko
 NL="
 "
 
-hidemyass_domain=1.hidemyass.com
-
 . unicode_unification
 
 t () {
@@ -339,25 +337,15 @@ do
 	method_ok=false
 	for method in \
 		"youtube-embedded" \
-		"hidemyass.com-embedded" \
 		"youtube-detailpage" \
-		"hidemyass.com-detailpage" \
 	; do
 		case "$method" in
 			youtube-detailpage)
 				$WGET $nvq_arg -U "$USER_AGENT" "$info_page_url_detailpage" -O -
 				;;
 			
-			hidemyass.com-detailpage)
-				$WGET $nvq_arg "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_detailpage")" -O -
-				;;
-			
 			youtube-embedded)
 				$WGET $nvq_arg -U "$USER_AGENT" "$info_page_url_embedded" -O -
-				;;
-			
-			hidemyass.com-embedded)
-				$WGET $nvq_arg "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$info_page_url_embedded")" -O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
@@ -506,11 +494,6 @@ do
 						else
 							$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || download_ok=false
 						fi
-						;;
-					
-					"hidemyass.com-embedded"|"hidemyass.com-detailpage")
-						$WGET "${wget_extra_arguments[@]}" $cont "http://$hidemyass_domain/includes/process.php?action=update&idx=1" --post-data "obfuscation=1&u=$(urlencode "$url")" -O "$name" \
-						|| download_ok=false
 						;;
 				esac
 				
