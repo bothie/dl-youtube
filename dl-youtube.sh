@@ -37,6 +37,37 @@ nvq_arg="-nv"
 declare -a wget_extra_arguments
 declare -a dl_youtune_extra_arguments
 
+# From the wget manpage:
+# 
+# 	--output-file=logfile
+# 		Log all messages to logfile.  The messages are normally reported to 
+# 		standard error.
+#	
+# 	--background
+# 		Go to background immediately after startup.  If no output file is 
+# 		specified via the -o, output is redirected to wget-log.
+# 
+# How easy could live be, if software would respect it's own documentation. 
+# Sad as it is, software doesn't always, and wget - at least version 1.19.1 
+# doesn't and creates 'wget-log.N' files where previous versions didn't. 
+# We're not using --background at any point, but when calling 
+# 'dl-youtube stuff &', wget still behaves as if. Now, we could simply use 
+# --output-file=/proc/self/fd/2 to force output back to stderr, but that 
+# wouldn't be too easy, would it? That's exactly what the wget developers 
+# thought, and so wget disrespects it and redirects to 'wget-log.N' anyway.
+# What to do then? Right. Create a subprocess, pipe stderr there and back to 
+# stderr from there. Thank you, wget team, I really have nothing else to do 
+# than to work around unconfigurable shit.
+#
+# Oh, and BASH still doesn't support multiple coprocs.
+wget () {
+	coproc wget_fix_stderr { cat >&2; }
+	$WGET "$@" \
+		0<&${wget_fix_stderr[1]} \
+		2>&${wget_fix_stderr[1]} \
+	;
+}
+
 while $processed_arg
 do
 	processed_arg=false
@@ -237,7 +268,11 @@ do
 		
 		t got playlist id "$plid"
 		num=1
-		$WGET $nv_arg "https://www.youtube.com/playlist?list=$plid" -O "$plid.play-list.$num.html" || continue
+		wget \
+			$nv_arg \
+			"https://www.youtube.com/playlist?list=$plid" \
+			-O "$plid.play-list.$num.html" \
+		|| continue
 		if test -n "$name_base"
 		then
 			title="$name_base"
@@ -258,15 +293,18 @@ do
 		do
 			let next_num=num+1
 			
-			$WGET $nv_arg "$(
-				echo -n "https://www.youtube.com"
-				cat "$plid.play-list.$num.html" \
-				| grep action_continuation \
-				| sed -e 's#.*"\(/browse_ajax?action_continuation=1[^"]\+\)\\\?".*#\1#' \
-				| urldecode \
-				| urldecode \
-				| sed -e 's/&amp;/\&/'
-			)" -O - \
+			wget \
+				$nv_arg \
+				"$(
+					echo -n "https://www.youtube.com"
+					cat "$plid.play-list.$num.html" \
+					| grep action_continuation \
+					| sed -e 's#.*"\(/browse_ajax?action_continuation=1[^"]\+\)\\\?".*#\1#' \
+					| urldecode \
+					| urldecode \
+					| sed -e 's/&amp;/\&/'
+				)" \
+				-O - \
 			| python -m json.tool \
 			| tee "$plid.play-list.$next_num.json" \
 			| grep '^ *"content_html": ' \
@@ -341,11 +379,19 @@ do
 	; do
 		case "$method" in
 			youtube-detailpage)
-				$WGET $nvq_arg -U "$USER_AGENT" "$info_page_url_detailpage" -O -
+				wget \
+					$nvq_arg \
+					-U "$USER_AGENT" \
+					"$info_page_url_detailpage" \
+					-O -
 				;;
 			
 			youtube-embedded)
-				$WGET $nvq_arg -U "$USER_AGENT" "$info_page_url_embedded" -O -
+				wget \
+					$nvq_arg \
+					-U "$USER_AGENT" \
+					"$info_page_url_embedded" \
+					-O -
 				;;
 		esac | sed -e 's/&/\
 /g' > "./$vid.info-page"
@@ -488,11 +534,21 @@ do
 						if $nv
 						then
 							(
-								$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" 2>&1 \
+								wget \
+									"${wget_extra_arguments[@]}" \
+									$cont \
+									"$url" \
+									-O "$name" \
+									2>&1 \
 								| sed -e "s/^\([-0-9: ]\+\) URL:[^ ]* \(\[[0-9/]\+\] -> \".*\" \[[0-9]\+\]\)$/\1 YT:$vid \2/"
 							) || download_ok=false
 						else
-							$WGET "${wget_extra_arguments[@]}" $cont "$url" -O "$name" || download_ok=false
+							wget \
+								"${wget_extra_arguments[@]}" \
+								$cont \
+								"$url" \
+								-O "$name" \
+							|| download_ok=false
 						fi
 						;;
 				esac
