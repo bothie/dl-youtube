@@ -423,17 +423,25 @@ do
 				split_youtube=" (Youtube: $vid)"
 			fi
 			
-			size="$(get_infopage_var url_encoded_fmt_stream_map | get_size)"
+			map="$(
+				get_infopage_var url_encoded_fmt_stream_map
+				get_infopage_var adaptive_fmts
+			)"
+			
+			size="$(echo "$map" | get_size)"
 			$nv || echo "Infopage url map size: $size"
 			for i in $(seq 1 1 $size)
 			do
-				index="$(get_infopage_var url_encoded_fmt_stream_map | get_index $i)"
+				index="$(echo "$map" | get_index $i)"
 				$nv || echo "$index" | urldecode
 				
 				url="$(echo "$index" | get_var url)"
 				itag="$(echo "$index" | get_var itag)"
 				sig="$(echo "$index" | get_var sig)"
-				test -n "$sig" && url="$url&signature=$sig"
+				clen="$(echo "$index" | get_var clen)"
+				cpn="$(dd if=/dev/urandom bs=12 count=1 2>/dev/null | base64 | sed -e 'y:/+:-_:')"
+				url_extra="&alr=yes&ratebypass=yes&c=WEB&cver=1.20170601&range=0-$clen&rn=11&rbuf=3527&cpn=$cpn"
+				test -n "$sig" && url="$url&signature=$sig$url_extra"
 				
 				ok=false
 				
