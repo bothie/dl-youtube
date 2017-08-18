@@ -564,6 +564,11 @@ do
 				if $download_ok
 				then
 					break
+				else
+					if ! test -s "$name"
+					then
+						rm "$name"
+					fi
 				fi
 			done
 			
