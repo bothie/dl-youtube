@@ -585,12 +585,13 @@ do
 		echo -en "\e[31mTried to download $vid using method $method: $fail_reason\e[0m" >&2
 	done
 	
-	rm "./$vid.info-page"
-	
 	if ! $method_ok
 	then
+		mv "$vid.info-page" "$base$split_youtube.info-page"
 		let num_videos_failed=num_videos_failed+1
 		continue
+	else
+		rm "./$vid.info-page"
 	fi
 done
 t ""
