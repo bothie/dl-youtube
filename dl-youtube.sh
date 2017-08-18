@@ -278,7 +278,7 @@ do
 			title="$name_base"
 		else
 			title="$(
-				grep 'title" content="[^"]*"' "$plid.play-list.$num.html" | sed -e 's/^.*title" content="\([^"]*\)".*$/\1/'
+				grep '"title" content="[^"]*"' "$plid.play-list.$num.html" | sed -e 's/^.*"title" content="\([^"]*\)".*$/\1/'
 			)"
 		fi
 		dir="$(dir_encode "$title") (Youtube: $plid)"
