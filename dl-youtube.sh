@@ -582,9 +582,11 @@ do
 				itag="$(echo "$index" | get_var itag)"
 				sig="$(echo "$index" | get_var sig)"
 				clen="$(echo "$index" | get_var clen)"
+				s="$(echo "$index" | get_var s)"
 				cpn="$(dd if=/dev/urandom bs=12 count=1 2>/dev/null | base64 | sed -e 'y:/+:-_:')"
 				url_extra="&alr=yes&ratebypass=yes&c=WEB&cver=1.20170601&range=0-$clen&rn=11&rbuf=3527&cpn=$cpn"
 				test -n "$sig" && url="$url&signature=$sig$url_extra"
+				test -n "$s" && url="$url&signature=$s"
 				
 				ok=false
 				
