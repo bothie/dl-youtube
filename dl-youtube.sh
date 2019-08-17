@@ -409,6 +409,17 @@ do
 				base="$(get_infopage_var title | sed -e 's!/!_!g' | unicode_unification)"
 			fi
 			
+			# Analyze player_response value from video's info page to extract a title if none found yet
+			
+			if test -z "$base"
+			then
+				(
+					player_response="$(get_infopage_var player_response)"
+					echo "$player_response"
+				) > "./$vid.player_response"
+				base="$(json_pp < "./$vid.player_response" | grep '^ *"title" : ' | sed -e 's/^ *"title" : "\(.*\)",$/\1/')"
+			fi
+			
 			# Use video id as title if no title could be extracted
 			
 			if test -z "$base"
