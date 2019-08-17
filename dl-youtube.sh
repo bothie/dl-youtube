@@ -398,12 +398,18 @@ do
 		
 		if test "$(get_infopage_var status)" == "ok"
 		then
+			# First, we give precedence to a video title given on the command line
+			
 			base="$name_base"
+			
+			# If no title given, get title from video's info page
 			
 			if test -z "$base"
 			then
 				base="$(get_infopage_var title | sed -e 's!/!_!g' | unicode_unification)"
 			fi
+			
+			# Use video id as title if no title could be extracted
 			
 			if test -z "$base"
 			then
