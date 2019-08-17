@@ -445,12 +445,138 @@ do
 				get_infopage_var adaptive_fmts
 			)"
 			
-			size="$(echo "$map" | get_size)"
-			$nv || echo "Infopage url map size: $size"
-			for i in $(seq 1 1 $size)
+			map_size="$(echo "$map" | get_size)"
+			if ! $nv
+			then
+				echo "Infopage url map size: $map_size"
+				for i in $(seq 1 1 $map_size)
+				do
+					index="$(echo "$map" | get_index $i)"
+					
+					itag=""
+					quality=""
+					quality_label=""
+					size=""
+					fps=""
+					bitrate=""
+					audio_sample_rate=""
+					type=""
+					
+					echo "$index" | while read line
+					do
+						vname="$(echo "$line" | sed -e 's/^\([^=]\+\)=\(.*\)$/\1/')"
+						value="$(echo "$line" | sed -e 's/^\([^=]\+\)=\(.*\)$/\2/')"
+						
+						case "$vname" in
+							audio_sample_rate)
+								audio_sample_rate="$value"
+								;;
+							
+							bitrate)
+								bitrate="$value"
+								;;
+							
+							fps)
+								fps="$value"
+								;;
+							
+							itag)
+								itag="$value"
+								;;
+							
+							quality)
+								quality="$value"
+								;;
+							
+							quality_label)
+								quality_label="$value"
+								;;
+							
+							size)
+								size="$value"
+								;;
+							
+							type)
+								type="$value"
+								;;
+						esac
+					done
+					
+					echo -en "\e[33m"
+					echo  -n "$itag ("
+					test -n "$quality" && echo -n "$quality"
+					test -n "$quality" && test -n "$quality_label" && echo -n "/"
+					test -n "$quality_label" && echo -n "$quality_label"
+					{ test -n "$quality" || test -n "$quality_label"; } && { test -n "$size" || test -n "$fps"; } && echo -n " "
+					test -n "$size" && echo -n "$size"
+					test -n "$fps" && echo -n "@$fps"
+					test -n "$audio_sample_rate" && echo -n "$audio_sample_rate"
+					test -n "$bitrate" && echo -n " [$bitrate]"
+					echo -en "): \e[35m"
+					echo -n "$(echo "$type" | urldecode)"
+					echo -e "\e[0m"
+					echo "$index" | while read line
+					do
+						vname="$(echo "$line" | sed -e 's/^\([^=]\+\)=\(.*\)$/\1/')"
+						value="$(echo "$line" | sed -e 's/^\([^=]\+\)=\(.*\)$/\2/')"
+						
+						case "$vname" in
+							itag|quality|quality_label|size|fps|bitrate|audio_sample_rate|type)
+								continue
+								;;
+							
+							url|sig|clen|cpn|lmt|init|index|s)
+								continue
+								;;
+							
+							eotf)
+								if test "$value" = "bt709"
+								then
+									continue
+								fi
+								;;
+							
+							primaries)
+								if test "$value" = "bt709"
+								then
+									continue
+								fi
+								;;
+							
+							projection_type)
+								if test "$value" = "1"
+								then
+									continue
+								fi
+								;;
+							
+							sp)
+								if test "$value" = "signature"
+								then
+									continue
+								fi
+								;;
+							
+							xtags)
+								if test -z "$value"
+								then
+									continue
+								fi
+								;;
+						esac
+						
+						echo -en "\t\e[36m"
+						echo  -n "$vname"
+						echo -en "\e[0m=\e[35m"
+						echo  -n "$(echo "$value" | urldecode)"
+						echo -e  "\e[0m"
+					done
+				done
+			fi
+			
+			for i in $(seq 1 1 $map_size)
 			do
 				index="$(echo "$map" | get_index $i)"
-				$nv || echo "$index" | urldecode
 				
 				url="$(echo "$index" | get_var url)"
 				itag="$(echo "$index" | get_var itag)"
