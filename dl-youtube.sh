@@ -418,7 +418,7 @@ do
 					player_response="$(get_infopage_var player_response)"
 					echo "$player_response"
 				) > "./$vid.player_response"
-				base="$(json_pp < "./$vid.player_response" | grep '^ *"title" : ' | sed -e 's/^ *"title" : "\(.*\)",$/\1/')"
+				base="$(json_pp < "./$vid.player_response" | grep '^ *"title" : "' | sed -e 's/^ *"title" : "\([^"]*\)",$/\1/')"
 			fi
 			
 			# Use video id as title if no title could be extracted
